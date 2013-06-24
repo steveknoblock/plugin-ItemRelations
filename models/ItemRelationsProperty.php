@@ -1,6 +1,6 @@
 <?php
-require_once 'ItemRelationsPropertyTable.php';
-class ItemRelationsProperty extends Omeka_Record
+require_once 'Table_ItemRelationsProperty.php';
+class ItemRelationsProperty extends Omeka_Record_AbstractRecord
 {
     public $id;
     public $vocabulary_id;

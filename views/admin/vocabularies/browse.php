@@ -1,6 +1,6 @@
 <?php
 $head = array('title' => 'Browse Vocabularies');
-head($head);
+echo head($head);
 ?>
 <h1><?php echo $head['title']; ?></h1>
 <div id="primary">
@@ -28,4 +28,4 @@ head($head);
     </tbody>
 </table>
 </div>
-<?php foot(); ?>
+<?php echo foot(); ?>

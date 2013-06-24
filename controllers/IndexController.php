@@ -1,9 +1,11 @@
 <?php
-class ItemRelations_IndexController extends Omeka_Controller_Action
+class ItemRelations_IndexController extends Omeka_Controller_AbstractActionController
 {
     public function indexAction()
     {        
-        $this->redirect->gotoSimple('browse', 'vocabularies');
+        
+        $this->_helper->redirector('browse', 'vocabularies');
+        
         return;
     }
 }

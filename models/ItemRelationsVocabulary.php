@@ -1,6 +1,6 @@
 <?php
-require_once 'ItemRelationsVocabularyTable.php';
-class ItemRelationsVocabulary extends Omeka_Record
+
+class ItemRelationsVocabulary extends Omeka_Record_AbstractRecord
 {
     public $id;
     public $name;
@@ -8,4 +8,5 @@ class ItemRelationsVocabulary extends Omeka_Record
     public $namespace_prefix;
     public $namespace_uri;
     public $custom;
+
 }

@@ -1,15 +1,17 @@
 <?php
-class ItemRelations_VocabulariesController extends Omeka_Controller_Action
+class ItemRelations_VocabulariesController extends Omeka_Controller_AbstractActionController
 {
     public function indexAction()
-    {        
-        $this->redirect->gotoSimple('browse');
+    {   
+        $this->_helper->redirector('browse');
         return;
     }
     
     public function browseAction()
     {
-        $vocabularies = $this->getTable('ItemRelationsVocabulary')->findAllCustomFirst();
+        //$vocabularies = $this->getTable('ItemRelationsVocabulary')->findAllCustomFirst();
+        $vocabularies = $this->_helper->db->getTable('ItemRelationsVocabulary')->findAllCustomFirst();
+        
         $this->view->vocabularies = $vocabularies;
     }
     
@@ -17,8 +19,10 @@ class ItemRelations_VocabulariesController extends Omeka_Controller_Action
     {
         $vocabularyId = $this->_getParam('id');
         
-        $vocabulary = $this->getTable('ItemRelationsVocabulary')->find($vocabularyId);
-        $properties = $this->getTable('ItemRelationsProperty')->findByVocabularyId($vocabularyId);
+         $vocabulary = $this->_helper->db->getTable('ItemRelationsVocabulary')->find($vocabularyId);
+        
+         $properties = $this->_helper->db->getTable('ItemRelationsProperty')->findByVocabularyId($vocabularyId);
+        
         
         $this->view->vocabulary = $vocabulary;
         $this->view->properties = $properties;
@@ -29,7 +33,7 @@ class ItemRelations_VocabulariesController extends Omeka_Controller_Action
         $vocabularyId = $this->_getParam('id');
         
         // Only custom vocabularies can be edited.
-        $vocabulary = $this->getTable('ItemRelationsVocabulary')->find($vocabularyId);
+        $vocabulary =  $this->_helper->db->getTable('ItemRelationsVocabulary')->find($vocabularyId);
         if (!$vocabulary->custom) {
             $this->redirect->gotoSimple('browse');
         }
@@ -40,11 +44,11 @@ class ItemRelations_VocabulariesController extends Omeka_Controller_Action
             $this->_handleEditVocabularyForm($vocabularyId);
             
             // Redirect to browse.
-            $this->flashSuccess('The vocabulary was successfully edited.');
+            $this->_helper->flashMessenger('The vocabulary was successfully edited.');
             $this->redirect->gotoSimple('browse');
         }
         
-        $properties = $this->getTable('ItemRelationsProperty')->findByVocabularyId($vocabularyId);
+        $properties = $this->_helper->db->getTable('ItemRelationsProperty')->findByVocabularyId($vocabularyId);
         $this->view->properties = $properties;
     }
     
@@ -53,7 +57,7 @@ class ItemRelations_VocabulariesController extends Omeka_Controller_Action
         // Edit existing properties.
         $propertyDescriptions = $this->_getParam('property_description');
         foreach ($propertyDescriptions as $propertyId => $propertyDescription) {
-            $property = $this->getTable('ItemRelationsProperty')->find($propertyId);
+            $property = $this->_helper->db->getTable('ItemRelationsProperty')->find($propertyId);
             $property->description = $propertyDescription;
             $property->save();
         }
@@ -71,7 +75,7 @@ class ItemRelations_VocabulariesController extends Omeka_Controller_Action
             }
             
             // Labels must be unique.
-            if ($this->getTable('ItemRelationsProperty')->findByLabel($newPropertyLabel)) {
+            if ($this->_helper->db->getTable('ItemRelationsProperty')->findByLabel($newPropertyLabel)) {
                 continue;
             }
             
@@ -87,7 +91,7 @@ class ItemRelations_VocabulariesController extends Omeka_Controller_Action
         $propertyDeletes = $this->_getParam('property_delete');
         foreach ($propertyDeletes as $propertyId => $propertyDelete) {
             if ($propertyDelete) {
-                $this->getTable('ItemRelationsProperty')->find($propertyId)->delete();
+                $this->_helper->db->getTable('ItemRelationsProperty')->find($propertyId)->delete();
             }
         }
     }

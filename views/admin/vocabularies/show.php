@@ -1,6 +1,6 @@
 <?php
 $head = array('title' => 'Show Vocabulary Properties');
-head($head);
+echo head($head);
 ?>
 <h1><?php echo $head['title']; ?></h1>
 <?php if ($this->vocabulary->custom): ?><p class="edit-button"><a href="<?php echo html_escape($this->url("item-relations/vocabularies/edit/id/{$vocabulary->id}")); ?>" class="edit">Edit Custom Vocabulary</a></p><?php endif; ?>
@@ -30,4 +30,4 @@ head($head);
 </table>
 <?php endif; ?>
 </div>
-<?php foot(); ?>
+<?php echo foot(); ?>

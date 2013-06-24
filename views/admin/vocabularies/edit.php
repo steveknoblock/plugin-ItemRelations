@@ -1,6 +1,6 @@
 <?php
 $head = array('title' => 'Edit Custom Vocabulary');
-head($head);
+echo head($head);
 ?>
 <script type="text/javascript">
 jQuery(document).ready(function () {
@@ -47,4 +47,4 @@ relation you want them to convey.</p>
 <?php echo __v()->formSubmit('submit_edit_vocabulary', 'Submit', array('class' => 'submit submit-medium')); ?>
 </form>
 </div>
-<?php foot(); ?>
+<?php echo foot(); ?>
