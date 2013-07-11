@@ -11,7 +11,7 @@
  *
  * @package ItemRelations
  */
-class Table_ItemRelationsRelations extends Omeka_Db_Table
+class Table_ItemRelationsRelation extends Omeka_Db_Table
 {
 
     protected $_alias = 'irir';

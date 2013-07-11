@@ -2,7 +2,7 @@
 class Table_ItemRelationsVocabulary extends Omeka_Db_Table
 {
     protected $_alias = 'irv';
-      //protected $_alias = 'item_relations_vocabularies';
+
     /**
      * Finds all vocabularies beginning with custom ones.
      * 
@@ -10,7 +10,7 @@ class Table_ItemRelationsVocabulary extends Omeka_Db_Table
      */
     public function findAllCustomFirst()
     {
-        $select = _helper->db->getSelect();
+        $select = $this->getSelect();
         
         $select->order('custom DESC');
         

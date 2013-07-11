@@ -1,5 +1,5 @@
 <?php
-require_once 'Table_ItemRelationsProperty.php';
+
 class ItemRelationsProperty extends Omeka_Record_AbstractRecord
 {
     public $id;

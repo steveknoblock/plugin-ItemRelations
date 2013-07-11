@@ -40,8 +40,8 @@ jQuery(document).ready(function () {
     <?php endforeach; ?>
     <tr class="item-relations-entry">
         <td>This Item</td>
-        <td><?php echo __v()->formSelect('item_relations_property_id[]', null, array('multiple' => false), $formSelectProperties); ?></td>
-        <td>Item ID <?php echo __v()->formText('item_relations_item_relation_object_item_id[]', null, array('size' => 8)); ?></td>
+        <td><?php echo get_view()->formSelect('item_relations_property_id[]', null, array('multiple' => false), $formSelectProperties); ?></td>
+        <td>Item ID <?php echo get_view()->formText('item_relations_item_relation_object_item_id[]', null, array('size' => 8)); ?></td>
         <td><span style="color:#ccc;">n/a</span></td>
     </tr>
     </tbody>

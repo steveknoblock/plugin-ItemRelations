@@ -62,12 +62,13 @@ function item_relations_display_item_relations(Item $item)
      */
     public function hookInstall()
     {
- 		print "<p>Breakone";
+
         // Create the table.
+        
         $db = $this->_db;
         
         $sql = "
-        CREATE TABLE IF NOT EXISTS `$db->ItemRelationsVocabulary` (
+        CREATE TABLE IF NOT EXISTS `{$db->ItemRelationsVocabulary}` (
          	`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `name` varchar(100) NOT NULL,
             `description` text,
@@ -78,9 +79,8 @@ function item_relations_display_item_relations(Item $item)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
         $db->query($sql);
         
-        
         $sql = "
-        CREATE TABLE IF NOT EXISTS `$db->ItemRelationsProp` (
+        CREATE TABLE IF NOT EXISTS `{$db->ItemRelationsProperty}` (
             `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `vocabulary_id` int(10) unsigned NOT NULL,
             `local_part` varchar(100) NOT NULL,
@@ -88,11 +88,10 @@ function item_relations_display_item_relations(Item $item)
             `description` text,
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
-        $db->query($sql);
-        
+        $db->query($sql);    
         
          $sql = "
-        CREATE TABLE IF NOT EXISTS `$db->ItemRelationsRelation` (
+        CREATE TABLE IF NOT EXISTS `{$db->ItemRelationsRelation}` (
              `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `subject_item_id` int(10) unsigned NOT NULL,
             `property_id` int(10) unsigned NOT NULL,
@@ -101,39 +100,25 @@ function item_relations_display_item_relations(Item $item)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
         $db->query($sql);
         
-       
-		
-		print "<p>Breaktwo";
-			
-		
-		
-		
+
         // Install the formal vocabularies and their properties.
         $formalVocabularies = include 'formal_vocabularies.php';
         
-        print "<p>Breakthree";
         
         foreach ($formalVocabularies as $formalVocabulary) {
-        	print "<p>Breakfour";
+
             $vocabulary = new ItemRelationsVocabulary;
             $vocabulary->name = $formalVocabulary['name'];
             $vocabulary->description = $formalVocabulary['description'];
             $vocabulary->namespace_prefix = $formalVocabulary['namespace_prefix'];
             $vocabulary->namespace_uri = $formalVocabulary['namespace_uri'];
             $vocabulary->custom = 0;
-            print "<pre>";
-            //var_dump($vocabulary);
-            print "</pre>";
-            print "<p>Breakfive";
             $vocabulary->save();
-            print "<p>Break10";
+            
             $vocabularyId = $db->lastInsertId();
-            print "<p>Break11";
-            print "Nested foreach";
+
             foreach ($formalVocabulary['properties'] as $formalProperty) {
-                print "<p>Break12";
                 $property = new ItemRelationsProperty;
-                print "<p>Break13";
                 $property->vocabulary_id = $vocabularyId;
                 $property->local_part = $formalProperty['local_part'];
                 $property->label = $formalProperty['label'];
@@ -142,7 +127,7 @@ function item_relations_display_item_relations(Item $item)
             }
         }
         
-        print "Break: after vocab install";
+        //print "Break: after vocab install";
         
         // Install a custom vocabulary.
         $customVocabulary = new ItemRelationsVocabulary;
@@ -154,7 +139,7 @@ function item_relations_display_item_relations(Item $item)
         $customVocabulary->save();
         
         $this->_installOptions();
-        print "End install";
+       // print "End install";
     }
     
     
@@ -164,18 +149,19 @@ function item_relations_display_item_relations(Item $item)
     public function hookUninstall()
     {        
 	    $db = $this->_db;
+
         // Drop the vocabularies table.
-        $sql = "DROP TABLE IF EXISTS `$db->ItemRelationsVocabularies`";
+        $sql = "DROP TABLE IF EXISTS `{$db->ItemRelationsVocabulary}`";
         $db->query($sql);
 
  		// Drop the properties table.
-        $sql = "DROP TABLE IF EXISTS `$db->ItemRelationsProperties`";
+        $sql = "DROP TABLE IF EXISTS `{$db->ItemRelationsProperty}`";
         $db->query($sql);
-        
+
         // Drop the relations table.
-        $sql = "DROP TABLE IF EXISTS `$db->ItemRelationsRelations`";
+        $sql = "DROP TABLE IF EXISTS `{$db->ItemRelationsRelation}`";
         $db->query($sql);
-        
+
         $this->_uninstallOptions();
     }
     
