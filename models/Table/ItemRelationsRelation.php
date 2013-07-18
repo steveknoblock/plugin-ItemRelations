@@ -23,7 +23,7 @@ class Table_ItemRelationsRelation extends Omeka_Db_Table
      */
     public function findBySubjectItemId($subjectItemId)
     {
-        $db = _helper->db->getDb();
+        $db = $this->getDb();
         $select = $this->getSelect()
                        ->join(array('irp' => $db->ItemRelationsProperty), 
                               'irir.property_id = irp.id', 
@@ -45,7 +45,7 @@ class Table_ItemRelationsRelation extends Omeka_Db_Table
      */
     public function findByObjectItemId($objectItemId)
     {
-        $db = _helper->db->getDb();
+        $db = $this->getDb();
         $select = $this->getSelect()
                        ->join(array('irp' => $db->ItemRelationsProperty), 
                               'irir.property_id = irp.id', 
