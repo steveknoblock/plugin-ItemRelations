@@ -1,4 +1,5 @@
 <?php
+
 class Table_ItemRelationsProperty extends Omeka_Db_Table
 {
     protected $_alias = 'irp';
@@ -26,7 +27,7 @@ class Table_ItemRelationsProperty extends Omeka_Db_Table
      */
     public function findAllWithVocabularyData()
     {
-        $db = _helper->db->getDb();
+        $db = $this->getDb();
         $select = $this->getSelect();
         
         $select->join(array('irv' => $db->ItemRelationsVocabulary), 
