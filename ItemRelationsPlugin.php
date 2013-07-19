@@ -18,7 +18,7 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
      * @var array Hooks for the plugin.
      */
     protected $_hooks = array('install', 'uninstall', 'upgrade', 'initialize',
-        'define_acl', 'define_routes', 'config_form', 'config',
+        'define_acl', 'config_form', 'config',
         'html_purifier_form_submission');
 
     /**
@@ -63,12 +63,20 @@ function item_relations_display_item_relations(Item $item)
     public function hookInstall()
     {
 
-        // Create the table.
-        
+        // Create tables.
         $db = $this->_db;
-        
+
+	// Test
+	print "CALLING: getTableName('ItemRelationsVocabulary')<br>";
+	$tmp = $db->getTableName('ItemRelationsVocabulary');
+	print 'RESULT: '. $tmp .'<br>';
+	print "CALLING: getTableName('ItemRelationsProperty')<br>";
+	$tmp = $db->getTableName('ItemRelationsProperty');
+	print  'RESULT: '. $tmp .'<br>';
+
+
         $sql = "
-        CREATE TABLE IF NOT EXISTS `{$db->ItemRelationsVocabulary}` (
+        CREATE TABLE IF NOT EXISTS `$db->ItemRelationsVocabulary` (
          	`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `name` varchar(100) NOT NULL,
             `description` text,
@@ -78,9 +86,9 @@ function item_relations_display_item_relations(Item $item)
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
         $db->query($sql);
-        
+
         $sql = "
-        CREATE TABLE IF NOT EXISTS `{$db->ItemRelationsProperty}` (
+        CREATE TABLE IF NOT EXISTS `$db->ItemRelationsProperty` (
             `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `vocabulary_id` int(10) unsigned NOT NULL,
             `local_part` varchar(100) NOT NULL,
@@ -89,9 +97,9 @@ function item_relations_display_item_relations(Item $item)
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
         $db->query($sql);    
-        
+              
          $sql = "
-        CREATE TABLE IF NOT EXISTS `{$db->ItemRelationsRelation}` (
+        CREATE TABLE IF NOT EXISTS `$db->ItemRelationsRelation` (
              `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
             `subject_item_id` int(10) unsigned NOT NULL,
             `property_id` int(10) unsigned NOT NULL,
@@ -99,7 +107,7 @@ function item_relations_display_item_relations(Item $item)
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
         $db->query($sql);
-        
+
 
         // Install the formal vocabularies and their properties.
         $formalVocabularies = include 'formal_vocabularies.php';
@@ -116,9 +124,11 @@ function item_relations_display_item_relations(Item $item)
             $vocabulary->save();
             
             $vocabularyId = $db->lastInsertId();
-
+			
             foreach ($formalVocabulary['properties'] as $formalProperty) {
+            
                 $property = new ItemRelationsProperty;
+                
                 $property->vocabulary_id = $vocabularyId;
                 $property->local_part = $formalProperty['local_part'];
                 $property->label = $formalProperty['label'];
@@ -126,8 +136,7 @@ function item_relations_display_item_relations(Item $item)
                 $property->save();
             }
         }
-        
-        //print "Break: after vocab install";
+
         
         // Install a custom vocabulary.
         $customVocabulary = new ItemRelationsVocabulary;
@@ -137,9 +146,9 @@ function item_relations_display_item_relations(Item $item)
         $customVocabulary->namespace_uri = null;
         $customVocabulary->custom = 1;
         $customVocabulary->save();
-        
+
         $this->_installOptions();
-       // print "End install";
+
     }
     
     
@@ -151,15 +160,15 @@ function item_relations_display_item_relations(Item $item)
 	    $db = $this->_db;
 
         // Drop the vocabularies table.
-        $sql = "DROP TABLE IF EXISTS `{$db->ItemRelationsVocabulary}`";
+        $sql = "DROP TABLE IF EXISTS `$db->ItemRelationsVocabulary`";
         $db->query($sql);
 
  		// Drop the properties table.
-        $sql = "DROP TABLE IF EXISTS `{$db->ItemRelationsProperty}`";
+        $sql = "DROP TABLE IF EXISTS `$db->ItemRelationsProperty`";
         $db->query($sql);
 
         // Drop the relations table.
-        $sql = "DROP TABLE IF EXISTS `{$db->ItemRelationsRelation}`";
+        $sql = "DROP TABLE IF EXISTS `$db->ItemRelationsRelation`";
         $db->query($sql);
 
         $this->_uninstallOptions();
@@ -202,16 +211,6 @@ function item_relations_display_item_relations(Item $item)
         set_option('item_relations_relation_format', 
                    $_POST['item_relations_relation_format']);
     }
-    
-    
-    /**
-     * Set the options from the config form input.
-     */
-   /* public function hookConfig()
-    {
-        set_option('simple_pages_filter_page_content', (int)(boolean)$_POST['simple_pages_filter_page_content']);
-    }
-    */
     
     
     /**
@@ -262,15 +261,6 @@ function item_relations_display_item_relations(Item $item)
         )));
     }
     */
-	
-	/**
-     * Routes
-     */
-    public function hookDefineRoutes($args)
-    {
-       // unimplemented
-    }
-    
 
     
     /**
@@ -520,8 +510,7 @@ function item_relations_display_item_relations(Item $item)
         }
     }
     
-    
-        /**
+    /**
      * Display item relations on the admin items show page.
      * 
      * @param Item $item
@@ -597,10 +586,10 @@ function item_relations_display_item_relations(Item $item)
             } else {
                 $onField = 'object_item_id';
             }
-            $select->join(array('irir' => $db->ItemRelationsItemRelation), 
-                          "irir.$onField = i.id", 
+            $select->join(array('item_relations_relations' => $db->ItemRelationsItemRelation), 
+                          "item_relations_relations.$onField = i.id", 
                           array())
-                   ->where('irir.property_id = ?', $_GET['item_relations_property_id']);
+                   ->where('item_relations_relations.property_id = ?', $_GET['item_relations_property_id']);
         }
         return $select;
     }
@@ -625,8 +614,8 @@ function item_relations_display_item_relations(Item $item)
     <tbody>
     <tr>
         <td>These Items</td>
-        <td><?php echo __v()->formSelect('custom[item_relations_property_id]', null, array('multiple' => false), $formSelectProperties); ?></td>
-        <td>Item ID <?php echo __v()->formText('custom[item_relations_item_relation_object_item_id]', null, array('size' => 8)); ?></td>
+        <td><?php echo get_view()->formSelect('custom[item_relations_property_id]', null, array('multiple' => false), $formSelectProperties); ?></td>
+        <td>Item ID <?php echo get_view()->formText('custom[item_relations_item_relation_object_item_id]', null, array('size' => 8)); ?></td>
     </tr>
     </tbody>
 </table>
