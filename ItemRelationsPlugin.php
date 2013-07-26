@@ -6,8 +6,9 @@
  * @license http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
-// for later
-//require_once dirname(__FILE__) . '/helpers/ItemRelationsFunctions.php';
+// helper functions
+// todo
+require_once dirname(__FILE__) . '/helpers/ItemRelationsFunctions.php';
 
 /**
  * Item Relations plugin.
@@ -17,9 +18,20 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
     /**
      * @var array Hooks for the plugin.
      */
-    protected $_hooks = array('install', 'uninstall', 'upgrade', 'initialize',
-        'define_acl', 'config_form', 'config',
-        'html_purifier_form_submission');
+    protected $_hooks = array(
+    	'install',
+    	'uninstall',
+    	'upgrade',
+    	'initialize',
+        'define_acl',
+        'config_form',
+        'config',
+        'html_purifier_form_submission',
+        'admin_append_to_items_show_secondary',
+        'public_append_to_items_show',
+        'public_items_show',
+        'after_save_item'
+    );
 
     /**
      * @var array Filters for the plugin.
@@ -44,18 +56,6 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
     const DEFAULT_RELATION_FORMAT = 'prefix_local_part';
 
 
-/**
- * Display item relations.
- * 
- * @param Item $item
- */
-function item_relations_display_item_relations(Item $item)
-{
-    $subjectRelations = ItemRelationsPlugin::prepareSubjectRelations($item);
-    $objectRelations = ItemRelationsPlugin::prepareObjectRelations($item);
-    include 'public_items_show.php';
-}
-
 
     /**
      * Install the plugin.
@@ -66,14 +66,14 @@ function item_relations_display_item_relations(Item $item)
         // Create tables.
         $db = $this->_db;
 
-	// Test
+	/*
 	print "CALLING: getTableName('ItemRelationsVocabulary')<br>";
 	$tmp = $db->getTableName('ItemRelationsVocabulary');
 	print 'RESULT: '. $tmp .'<br>';
 	print "CALLING: getTableName('ItemRelationsProperty')<br>";
 	$tmp = $db->getTableName('ItemRelationsProperty');
 	print  'RESULT: '. $tmp .'<br>';
-
+	*/
 
         $sql = "
         CREATE TABLE IF NOT EXISTS `$db->ItemRelationsVocabulary` (
@@ -281,12 +281,45 @@ function item_relations_display_item_relations(Item $item)
     /**
      * Display item relations on the public items show page.
      */
-    public static function publicAppendToItemsShow()
+    public static function hookPublicAppendToItemsShow()
     {
+    print "IN hookPublicAppendToItemsShow()<br>";
         if ('1' == get_option('item_relations_public_append_to_items_show')) {
             $item = get_current_record('item');
-            item_relations_display_item_relations($item);
+            item_relations_display_relations($item);
         }
+    }
+   
+   
+	/**
+	 * Display item relations.
+	 * Todo This is a helper function from 1.x version, remove or do whatever is recommended for functions mixed into the plugin hooks and filters.
+	 * @param Item $item
+	 */
+	protected function item_relations_display_relations(Item $item)
+	{
+		print "IN item_relations_display_relations()<br>";
+		$subjectRelations = ItemRelationsPlugin::prepareSubjectRelations($item);
+		$objectRelations = ItemRelationsPlugin::prepareObjectRelations($item);
+		include 'public_items_show.php';
+	}
+
+
+    /**
+     * Display item relations on the public items show page.
+     */  
+    public function hookPublicItemsShow() {
+    	print "IN hookPublicItemsShow()";
+		if ('1' == get_option('item_relations_public_append_to_items_show')) {
+            $item = get_current_record('item');
+            $this->item_relations_display_relations($item);
+            
+            /*
+                $subjectRelations = ItemRelationsPlugin::prepareSubjectRelations($item);
+    			$objectRelations = ItemRelationsPlugin::prepareObjectRelations($item);
+    			include 'public_items_show.php';
+    		*/
+        }    
     }
     
 
@@ -354,23 +387,6 @@ function item_relations_display_item_relations(Item $item)
     
     /*************************************************************************/
     
-    
-    /**
-     * Return a item's title.
-     * 
-     * @param int $itemId The item ID.
-     * @return string
-     */
-    public static function getItemTitle($itemId)
-    {
-       $title = item('Dublin Core', 'Title', array(), get_record_by_id('item', $id));
-        if (!trim($title)) {
-            $title = $itemId;
-        }
-        return $title;
-    }
-    
-    
    /**
      * Prepare subject item relations for display.
      * 
@@ -379,16 +395,21 @@ function item_relations_display_item_relations(Item $item)
      */
     public static function prepareSubjectRelations(Item $item)
     {
-
-        $subjects = $this->_helper->db->getTable('ItemRelationsItemRelation')->find('subject',$item->id);
+		
+		//$db = get_db();
+        //$subjects = $db->getTable('ItemRelationsItemRelation')->findBySubjectItemId($item->id);
+        
+        $subjects = get_db()->getTable('ItemRelationsRelation')->findBySubjectItemId($item->id);
         $subjectRelations = array();
+        print "Subjects:";
+        //print_r( $subjects );
         foreach ($subjects as $subject) {
             $subjectRelations[] = array('item_relation_id' => $subject->id, 
                                         'object_item_id' => $subject->object_item_id, 
                                         'object_item_title' => self::getItemTitle($subject->object_item_id), 
                                         'relation_text' => self::getRelationText($subject->vocabulary_namespace_prefix, 
-                                                                                 $subject->property_local_part, 
-                                                                                 $subject->property_label), 
+                                        $subject->property_local_part, 
+                                        $subject->property_label), 
                                         'relation_description' => $subject->property_description);
         }
         return $subjectRelations;
@@ -402,19 +423,39 @@ function item_relations_display_item_relations(Item $item)
      */
     public static function prepareObjectRelations(Item $item)
     {
-        $objects = $this->_helper->db->getTable('ItemRelationsRelations')->findByObjectItemId($item->id);
+        $objects = get_db()->getTable('ItemRelationsRelation')->findByObjectItemId($item->id);
         $objectRelations = array();
         foreach ($objects as $object) {
             $objectRelations[] = array('item_relation_id' => $object->id, 
                                        'subject_item_id' => $object->subject_item_id, 
                                        'subject_item_title' => self::getItemTitle($object->subject_item_id), 
                                        'relation_text' => self::getRelationText($object->vocabulary_namespace_prefix, 
-                                                                                $object->property_local_part, 
-                                                                                $object->property_label), 
+                                    	$object->property_local_part, 
+                                        $object->property_label), 
                                        'relation_description' => $object->property_description);
         }
         return $objectRelations;
     }
+
+
+	/**
+     * Return a item's title.
+     * 
+     * @param int $itemId The item ID.
+     * @return string
+     */
+    public static function getItemTitle($itemId)
+    {
+       //$title = item('Dublin Core', 'Title', array(), get_record_by_id('item', $id));
+       $title = metadata(get_record_by_id('item', $itemId), array('Dublin Core', 'Title'), 'all');
+       // rewrite this
+        if (!trim($title[0])) {
+            $title = $itemId;
+        }
+        return $title[0];
+    }
+    
+
     
     /**
      * Insert an item relation.
@@ -426,7 +467,7 @@ function item_relations_display_item_relations(Item $item)
      */
     public static function insertItemRelation($subjectItem, $propertyId, $objectItem)
     {
-        
+        print "IN insertItemRelation()<br>";
         // Only numeric property IDs are valid.
         if (!is_numeric($propertyId)) {
             return false;
@@ -434,12 +475,12 @@ function item_relations_display_item_relations(Item $item)
         
         // Set the subject item.
         if (!($subjectItem instanceOf Item)) {
-            $subjectItem = $this->_helper->db->getTable('Item')->find($subjectItem);
+            $subjectItem = get_db()->getTable('Item')->find($subjectItem);
         }
         
         // Set the object item.
         if (!($objectItem instanceOf Item)) {
-            $objectItem = $this->_helper->db->getTable('Item')->find($objectItem);
+            $objectItem = get_db()->getTable('Item')->find($objectItem);
         }
         
         // Don't save the relation if the subject or object items don't exist.
@@ -447,7 +488,7 @@ function item_relations_display_item_relations(Item $item)
             return false;
         }
         
-        $itemRelation = new ItemRelationsItemRelation;
+        $itemRelation = new ItemRelationsRelation;
         $itemRelation->subject_item_id = $subjectItem->id;
         $itemRelation->property_id = $propertyId;
         $itemRelation->object_item_id = $objectItem->id;
@@ -456,24 +497,65 @@ function item_relations_display_item_relations(Item $item)
         return true;
     }
     
-   /**
-     * Prepare before saving the form.
+
+    /**
+     * Prepare special variables before saving the form.
      */
-    public function beforeSave($args)
+    protected function beforeSave($args)
     {
-    print "beforeSave";
+		print "beforeSave";
+		debug("IN beforeSave");
     }
     
+/*
+original
+   
+    public static function afterSaveFormRecord($record, $post)
+    {
+        $db = get_db();
+        
+        if (!($record instanceof Item)) {
+            return;
+        }
+        
+        // Save item relations.
+        foreach ($post['item_relations_property_id'] as $key => $propertyId) {
+            
+            $insertedItemRelation = self::insertItemRelation(
+                $record, 
+                $propertyId, 
+                $post['item_relations_item_relation_object_item_id'][$key]
+            );
+            if (!$insertedItemRelation) {
+                continue;
+            }
+        }
+        
+        // Delete item relations.
+        if (isset($post['item_relations_item_relation_delete'])) {
+            foreach ($post['item_relations_item_relation_delete'] as $itemRelationId) {
+                $itemRelation = $db->getTable('ItemRelationsItemRelation')->find($itemRelationId);
+                // When an item is related to itself, deleting both relations 
+                // simultaniously will result in an error. Prevent this by 
+                // checking if the item relation exists prior to deletion.
+                if ($itemRelation) {
+                    $itemRelation->delete();
+                }
+            }
+        }
+    }
+*/
 
-     /**
+   /**
      * Save the item relations after saving an item add/edit form.
      * 
      * @param Omeka_Record $record
      * @param array $post
      */
-    public function afterSave($args)
+    public function hookAfterSaveItem($args)
     {
-    print "afterSave";
+    debug("IN hookAfterSaveItem()");
+    print "IN hookAfterSaveItem()<br>";
     	$record = $args['record'];
     	$post = $args['post'];
     
@@ -509,20 +591,23 @@ function item_relations_display_item_relations(Item $item)
             }
         }
     }
-    
+
+
     /**
      * Display item relations on the admin items show page.
      * 
      * @param Item $item
      */
-    public static function adminAppendToItemsShowSecondary($item)
+   
+    public static function hookAdminAppendToItemsShowSecondary($item)
     {
+    	print "IN hook AdminAppendToItemsShowSecondary()";
         $subjectRelations = self::prepareSubjectRelations($item);
         $objectRelations = self::prepareObjectRelations($item);
         include 'item_relations_secondary.php';
     }
     
-
+    
     
     /**
      * Add the "Item Relations" tab to the admin items add/edit page.
@@ -531,9 +616,9 @@ function item_relations_display_item_relations(Item $item)
      */
     public static function filterAdminItemsFormTabs($tabs, $args)
     {
-    
+
     	$item = $args['item'];
-    
+
         $formSelectProperties = self::getFormSelectProperties();
         $subjectRelations = self::prepareSubjectRelations($item);
         $objectRelations = self::prepareObjectRelations($item);
@@ -643,9 +728,13 @@ function item_relations_display_item_relations(Item $item)
      */
     public static function getFormSelectProperties()
     {
-        $db = get_db();
-        $properties = $db->getTable('ItemRelationsProperty')->findAllWithVocabularyData();
+
+		// SimplePages example
+        // $pages = get_db()->getTable('SimplePagesPage')->findAll();
+        $properties = get_db()->getTable('ItemRelationsProperty')->findAllWithVocabularyData();
+
         $formSelectProperties = array('' => 'Select below...');
+        
         foreach ($properties as $property) {
             $optionValue = self::getRelationText($property->vocabulary_namespace_prefix, 
                                                  $property->local_part, 
