@@ -9,7 +9,6 @@ class ItemRelations_VocabulariesController extends Omeka_Controller_AbstractActi
     
     public function browseAction()
     {
-        //$vocabularies = $this->getTable('ItemRelationsVocabulary')->findAllCustomFirst();
         $vocabularies = $this->_helper->db->getTable('ItemRelationsVocabulary')->findAllCustomFirst();
         
         $this->view->vocabularies = $vocabularies;
@@ -45,7 +44,7 @@ class ItemRelations_VocabulariesController extends Omeka_Controller_AbstractActi
             
             // Redirect to browse.
             $this->_helper->flashMessenger('The vocabulary was successfully edited.');
-            $this->redirect->gotoSimple('browse');
+            $this->_helper->redirector('browse');
         }
         
         $properties = $this->_helper->db->getTable('ItemRelationsProperty')->findByVocabularyId($vocabularyId);

@@ -13,4 +13,3 @@
         <p class="explanation">Select the format of an item's relations that you'd prefer to show. If one is unavailable the other will be used.</p>
     </div>
 </div>
-
