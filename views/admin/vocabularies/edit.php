@@ -19,6 +19,7 @@ jQuery(document).ready(function () {
 Property labels must be unique. You cannot edit property lables once they've 
 been created, so make sure they're spelled correctly and convey the exact 
 relation you want them to convey.</p>
+
 <form method="post">
 <table>
     <thead>
