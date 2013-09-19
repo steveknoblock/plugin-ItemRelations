@@ -2,7 +2,9 @@
 
 class Table_ItemRelationsProperty extends Omeka_Db_Table
 {
-    protected $_alias = 'irp';
+    //protected $_alias = $this->getTableAlias();
+    
+    //'item_relations_properties';
     
     /**
      * Find properties by vocabulary.
@@ -27,11 +29,12 @@ class Table_ItemRelationsProperty extends Omeka_Db_Table
      */
     public function findAllWithVocabularyData()
     {
+
         $db = $this->getDb();
         $select = $this->getSelect();
         
-        $select->join(array('irv' => $db->ItemRelationsVocabulary), 
-                      'irp.vocabulary_id = irv.id', 
+        $select->join(array('item_relations_vocabularies' => $db->ItemRelationsVocabulary), 
+                      'item_relations_properties.vocabulary_id = item_relations_vocabularies.id', 
                       array('vocabulary_name' => 'name', 
                             'vocabulary_description' => 'description', 
                             'vocabulary_namespace_prefix' => 'namespace_prefix', 

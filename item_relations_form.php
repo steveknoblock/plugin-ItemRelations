@@ -11,7 +11,7 @@ jQuery(document).ready(function () {
     });
 });
 </script>
-<p>Here you can relate this item to another item and delete existing relations. For descriptions of the relations go to the <a href="<?php echo uri('item-relations/vocabularies/'); ?>">Browse Vocabularies</a> page. Invalid item IDs will be ignored.</p>
+<p>Here you can relate this item to another item and delete existing relations. For descriptions of the relations go to the <a href="<?php echo url('item-relations/vocabularies/'); ?>">Browse Vocabularies</a> page. Invalid item IDs will be ignored.</p>
 <table>
     <thead>
     <tr>
@@ -26,13 +26,13 @@ jQuery(document).ready(function () {
     <tr>
         <td>This Item</td>
         <td><?php echo $subjectRelation['relation_text']; ?></td>
-        <td><a href="<?php echo uri('items/show/' . $subjectRelation['object_item_id']); ?>" target="_blank"><?php echo $subjectRelation['object_item_title']; ?></a></td>
+        <td><a href="<?php echo url('items/show/' . $subjectRelation['object_item_id']); ?>" target="_blank"><?php echo $subjectRelation['object_item_title']; ?></a></td>
         <td><input type="checkbox" name="item_relations_item_relation_delete[]" value="<?php echo $subjectRelation['item_relation_id']; ?>" /></td>
     </tr>
     <?php endforeach; ?>
     <?php foreach ($objectRelations as $objectRelation): ?>
     <tr>
-        <td><a href="<?php echo uri('items/show/' . $objectRelation['subject_item_id']); ?>" target="_blank"><?php echo $objectRelation['subject_item_title']; ?></a></td>
+        <td><a href="<?php echo url('items/show/' . $objectRelation['subject_item_id']); ?>" target="_blank"><?php echo $objectRelation['subject_item_title']; ?></a></td>
         <td><?php echo $objectRelation['relation_text']; ?></td>
         <td>This Item</td>
         <td><input type="checkbox" name="item_relations_item_relation_delete[]" value="<?php echo $objectRelation['item_relation_id']; ?>" /></td>

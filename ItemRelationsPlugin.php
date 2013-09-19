@@ -22,39 +22,42 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
     	'install',
     	'uninstall',
     	'upgrade',
-    	'initialize',
-        'define_acl',
-        'config_form',
         'config',
+		'config_form',
+        'define_acl',
+    	'initialize',
+		'after_save_item',
+        'admin_items_show_sidebar',
+ 		'public_items_show',
         'html_purifier_form_submission',
-        'admin_append_to_items_show_secondary',
-        'public_append_to_items_show',
-        'public_items_show',
-        'after_save_item'
     );
+
 
     /**
      * @var array Filters for the plugin.
      */
     
-    protected $_filters = array('admin_items_form_tabs','admin_navigation_main',
-        'search_record_types', 'page_caching_whitelist',
-        'page_caching_blacklist_for_record');
+    protected $_filters = array(
+    	'admin_items_form_tabs',
+    	'admin_navigation_main',
+        'search_record_types',
+        'page_caching_whitelist',
+        'page_caching_blacklist_for_record'
+    );
 	
 	
-    
     /**
      * @var array Options and their default values.
      */
     protected $_options = array(
-        'item_relations_public_append_to_items_show' => null,
+        'item_relations_public_items_show' => null,
         'item_relations_relation_format' => null
     );
 
-	// Configuration defaults.
-    const DEFAULT_PUBLIC_APPEND_TO_ITEMS_SHOW = 1;
-    const DEFAULT_RELATION_FORMAT = 'prefix_local_part';
 
+	// Configuration defaults.
+    const DEFAULT_PUBLIC_ITEMS_SHOW = 1;
+    const DEFAULT_RELATION_FORMAT = 'prefix_local_part';
 
 
     /**
@@ -175,15 +178,14 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
     }
     
         
-    
    /**
      * Display the plugin configuration form.
      */
     public static function hookConfigForm()
     {
-        $publicAppendToItemsShow = get_option('item_relations_public_append_to_items_show');
+        $publicAppendToItemsShow = get_option('item_relations_public_items_show');
         if (null == $publicAppendToItemsShow) {
-            $publicAppendToItemsShow = self::DEFAULT_PUBLIC_APPEND_TO_ITEMS_SHOW;
+            $publicAppendToItemsShow = self::DEFAULT_PUBLIC_ITEMS_SHOW;
         }
         
         $relationFormat = get_option('item_relations_relation_format');
@@ -206,8 +208,8 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
 	//  set_option('simple_pages_filter_page_content', (int)(boolean)$_POST['simple_pages_filter_page_content']);
  
  	// Set options
-        set_option('item_relations_public_append_to_items_show', 
-        (int)(boolean)$_POST['item_relations_public_append_to_items_show']);
+        set_option('item_relations_public_items_show', 
+        (int)(boolean)$_POST['item_relations_public_items_show']);
         set_option('item_relations_relation_format', 
                    $_POST['item_relations_relation_format']);
     }
@@ -221,7 +223,29 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
    	public function hookUpgrade($args)
     {
     //unimplemented
+    /*
+    	What changes between 1.0 and this version?
+    	
+    	name of relations table
+    */
+    /* code example from SimplePages plugin
+        $oldVersion = $args['old_version'];
+        $newVersion = $args['new_version'];
+        $db = $this->_db;
+         if ($oldVersion < '2.0') {
+         
+            $db->query("ALTER TABLE `$db->SimplePagesPage` DROP `add_to_public_nav`");
+            delete_option('simple_pages_home_page_id');
+            
+          	$sql = "ALTER TABLE `$db->SimplePagesPage` ADD INDEX ( `is_published` )";
+            $db->query($sql);    
+            
+        	$sql = "ALTER TABLE `$db->SimplePagesPage` ADD `parent_id` INT UNSIGNED NOT NULL ";
+            $db->query($sql);
+        */
+            
     }
+    
     
    /**
      * Add the translations.
@@ -230,7 +254,8 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
     {
        // unimplemented
     }
-    
+
+
     /**
      * Define the ACL.
      * 
@@ -253,16 +278,6 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
     }
     
     
-    /*
-        public static function defineAcl($acl)
-    {
-        $acl->loadResourceList(array('ItemRelations_Vocabularies' => array(
-            'index', 'browse', 'show', 'edit'
-        )));
-    }
-    */
-
-    
     /**
      * Filter the 'text' field of the simple-pages form, but only if the 
      * 'simple_pages_filter_page_content' setting has been enabled from within the
@@ -283,8 +298,7 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
      */
     public static function hookPublicAppendToItemsShow()
     {
-    print "IN hookPublicAppendToItemsShow()<br>";
-        if ('1' == get_option('item_relations_public_append_to_items_show')) {
+        if ('1' == get_option('item_relations_public_items_show')) {
             $item = get_current_record('item');
             item_relations_display_relations($item);
         }
@@ -298,7 +312,6 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
 	 */
 	protected function item_relations_display_relations(Item $item)
 	{
-		print "IN item_relations_display_relations()<br>";
 		$subjectRelations = ItemRelationsPlugin::prepareSubjectRelations($item);
 		$objectRelations = ItemRelationsPlugin::prepareObjectRelations($item);
 		include 'public_items_show.php';
@@ -309,8 +322,7 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
      * Display item relations on the public items show page.
      */  
     public function hookPublicItemsShow() {
-    	print "IN hookPublicItemsShow()";
-		if ('1' == get_option('item_relations_public_append_to_items_show')) {
+		if ('1' == get_option('item_relations_public_items_show')) {
             $item = get_current_record('item');
             $this->item_relations_display_relations($item);
             
@@ -321,9 +333,8 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
     		*/
         }    
     }
-    
 
-    
+
     /**
      * Add the Item Relations link to the admin main navigation.
      * 
@@ -351,6 +362,7 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
         $recordTypes['ItemRelationsRelation'] = __('Item Relations');
         return $recordTypes;
     }
+
 
     /**
      * Specify the default list of urls to whitelist
@@ -401,8 +413,7 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
         
         $subjects = get_db()->getTable('ItemRelationsRelation')->findBySubjectItemId($item->id);
         $subjectRelations = array();
-        print "Subjects:";
-        //print_r( $subjects );
+
         foreach ($subjects as $subject) {
             $subjectRelations[] = array('item_relation_id' => $subject->id, 
                                         'object_item_id' => $subject->object_item_id, 
@@ -467,7 +478,7 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
      */
     public static function insertItemRelation($subjectItem, $propertyId, $objectItem)
     {
-        print "IN insertItemRelation()<br>";
+
         // Only numeric property IDs are valid.
         if (!is_numeric($propertyId)) {
             return false;
@@ -503,8 +514,8 @@ class ItemRelationsPlugin extends Omeka_Plugin_AbstractPlugin
      */
     protected function beforeSave($args)
     {
-		print "beforeSave";
-		debug("IN beforeSave");
+    	// unimplemented
+		//debug("IN beforeSave");
     }
     
 /*
@@ -554,8 +565,8 @@ original
      */
     public function hookAfterSaveItem($args)
     {
-    debug("IN hookAfterSaveItem()");
-    print "IN hookAfterSaveItem()<br>";
+    //debug("IN hookAfterSaveItem()");
+
     	$record = $args['record'];
     	$post = $args['post'];
     
@@ -599,12 +610,38 @@ original
      * @param Item $item
      */
    
-    public static function hookAdminAppendToItemsShowSecondary($item)
+    public function hookAdminItemsShowSidebar($args)
     {
-    	print "IN hook AdminAppendToItemsShowSecondary()";
+    	$view = $args['view'];
+    	$item = $args['item'];
         $subjectRelations = self::prepareSubjectRelations($item);
         $objectRelations = self::prepareObjectRelations($item);
-        include 'item_relations_secondary.php';
+        
+        $html = '';
+        $html .= '<div class="info-panel">';
+        $html .= '<h2>Item Relations</h2>';
+        $html .= '<div>';
+        if (!$subjectRelations && !$objectRelations) {
+        	$html .= '<p>This item has no relations.</p>';
+        	} else {
+        		foreach ($subjectRelations as $subjectRelation) {
+        	$html .= '<ul>';
+        	$html .= '<li>This Item '. $subjectRelation['relation_text'];
+        	$html .= ' <a href="'. url('items/show/' . $subjectRelation['object_item_id']) .'">'. $subjectRelation['object_item_title'] .'</a>';
+        	$html .= '</li>';
+        		}
+        		foreach ($objectRelations as $objectRelation) {
+        	$html .= '<ul>';
+        	$html .= '<li>This Item '. $subjectRelation['relation_text'];
+        	$html .= '<a href="'. url('items/show/' . $objectRelation['subject_item_id']) .'">'. $objectRelation['subject_item_title'] .'</a>';
+        	$html .= $objectRelation['relation_text'];
+        	$html .= 'This Item</li>';
+        		}
+        	$html .= '</ul>';
+		}
+		$html .= '</div>';
+        $html .= '</div>';
+        echo $html;
     }
     
     
