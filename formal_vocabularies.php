@@ -1,4 +1,5 @@
 <?php
+
 return $formalVocabularies = array(
     array(
         'name' => 'Dublin Core', 
